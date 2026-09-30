@@ -195,11 +195,13 @@ impl SpecializedRenderPipeline for TilemapPipeline {
                 entry_point: Some("vertex".into()),
                 shader_defs: shader_defs.clone(),
                 buffers: vec![vertex_layout],
+                constants: Vec::new(),
             },
             fragment: Some(FragmentState {
                 shader: TILEMAP_SHADER_FRAGMENT,
                 shader_defs,
                 entry_point: Some("fragment".into()),
+                constants: Vec::new(),
                 targets: vec![Some(ColorTargetState {
                     format: key.target_format,
                     blend: Some(BlendState {

@@ -1,44 +1,25 @@
-#import bevy_ecs_tilemap::common::{VertexInput, tilemap_data}
-#import bevy_ecs_tilemap::mesh_output::MeshOutput
-#import bevy_sprite::mesh2d_view_bindings::{view, globals}
-#import bevy_ecs_tilemap::vertex_output::MeshVertexOutput
-
-#ifdef SQUARE
-    #import bevy_ecs_tilemap::square::get_mesh
-#endif
-
-#ifdef ISO_DIAMOND
-    #import bevy_ecs_tilemap::diamond_iso::get_mesh
-#endif
-
-#ifdef ISO_STAGGERED
-    #import bevy_ecs_tilemap::staggered_iso::get_mesh
-#endif
-
-#ifdef COLUMN_EVEN_HEX
-    #import bevy_ecs_tilemap::column_even_hex::get_mesh
-#endif
-
-#ifdef COLUMN_HEX
-    #import bevy_ecs_tilemap::column_hex::get_mesh
-#endif
-
-#ifdef COLUMN_ODD_HEX
-    #import bevy_ecs_tilemap::column_odd_hex::get_mesh
-#endif
-
-#ifdef ROW_EVEN_HEX
-    #import bevy_ecs_tilemap::row_even_hex::get_mesh
-#endif
-
-#ifdef ROW_HEX
-    #import bevy_ecs_tilemap::row_hex::get_mesh
-#endif
-
-#ifdef ROW_ODD_HEX
-    #import bevy_ecs_tilemap::row_odd_hex::get_mesh
-#endif
-
+import bevy_ecs_tilemap::render::shaders::common::{VertexInput, tilemap_data};
+import bevy_ecs_tilemap::render::shaders::mesh_output::MeshOutput;
+import bevy_sprite_render::mesh2d::view_bindings::{view, globals};
+import bevy_ecs_tilemap::render::shaders::tilemap_vertex_output::MeshVertexOutput;
+@if(SQUARE)
+    import bevy_ecs_tilemap::render::shaders::square::get_mesh;
+@if(ISO_DIAMOND)
+    import bevy_ecs_tilemap::render::shaders::diamond_iso::get_mesh;
+@if(ISO_STAGGERED)
+    import bevy_ecs_tilemap::render::shaders::staggered_iso::get_mesh;
+@if(COLUMN_EVEN_HEX)
+    import bevy_ecs_tilemap::render::shaders::column_even_hex::get_mesh;
+@if(COLUMN_HEX)
+    import bevy_ecs_tilemap::render::shaders::column_hex::get_mesh;
+@if(COLUMN_ODD_HEX)
+    import bevy_ecs_tilemap::render::shaders::column_odd_hex::get_mesh;
+@if(ROW_EVEN_HEX)
+    import bevy_ecs_tilemap::render::shaders::row_even_hex::get_mesh;
+@if(ROW_HEX)
+    import bevy_ecs_tilemap::render::shaders::row_hex::get_mesh;
+@if(ROW_ODD_HEX)
+    import bevy_ecs_tilemap::render::shaders::row_odd_hex::get_mesh;
 
 @vertex
 fn vertex(vertex_input: VertexInput) -> MeshVertexOutput {
@@ -55,23 +36,23 @@ fn vertex(vertex_input: VertexInput) -> MeshVertexOutput {
 
     let texture_index: u32 = u32(current_animation_frame);
 
-    #ifdef ATLAS
-    // Get the top-left corner of the current frame in the texture, accounting for padding around the whole texture
-    // as well as spacing between the tiles.
-    let columns: u32 = u32(round((tilemap_data.texture_size.x - tilemap_data.spacing.x) / (tilemap_data.tile_size.x + tilemap_data.spacing.x)));
-    let sprite_sheet_x: f32 = tilemap_data.spacing.x + floor(f32(texture_index % columns)) * (tilemap_data.tile_size.x + tilemap_data.spacing.x);
-    let sprite_sheet_y: f32 = tilemap_data.spacing.y + floor(f32(texture_index / columns)) * (tilemap_data.tile_size.y + tilemap_data.spacing.y);
+    @if(ATLAS) {
+        // Get the top-left corner of the current frame in the texture, accounting for padding around the whole texture
+        // as well as spacing between the tiles.
+        let columns: u32 = u32(round((tilemap_data.texture_size.x - tilemap_data.spacing.x) / (tilemap_data.tile_size.x + tilemap_data.spacing.x)));
+        let sprite_sheet_x: f32 = tilemap_data.spacing.x + floor(f32(texture_index % columns)) * (tilemap_data.tile_size.x + tilemap_data.spacing.x);
+        let sprite_sheet_y: f32 = tilemap_data.spacing.y + floor(f32(texture_index / columns)) * (tilemap_data.tile_size.y + tilemap_data.spacing.y);
 
-    let start_u: f32 = sprite_sheet_x / tilemap_data.texture_size.x;
-    let end_u: f32 = (sprite_sheet_x + tilemap_data.tile_size.x) / tilemap_data.texture_size.x;
-    let start_v: f32 = sprite_sheet_y / tilemap_data.texture_size.y;
-    let end_v: f32 = (sprite_sheet_y + tilemap_data.tile_size.y) / tilemap_data.texture_size.y;
-    #else
-    let start_u: f32 = 0.0;
-    let end_u: f32 = 1.0;
-    let start_v: f32 = 0.0;
-    let end_v: f32 = 1.0;
-    #endif
+        let start_u: f32 = sprite_sheet_x / tilemap_data.texture_size.x;
+        let end_u: f32 = (sprite_sheet_x + tilemap_data.tile_size.x) / tilemap_data.texture_size.x;
+        let start_v: f32 = sprite_sheet_y / tilemap_data.texture_size.y;
+        let end_v: f32 = (sprite_sheet_y + tilemap_data.tile_size.y) / tilemap_data.texture_size.y;
+    } @else {
+        let start_u: f32 = 0.0;
+        let end_u: f32 = 1.0;
+        let start_v: f32 = 0.0;
+        let end_v: f32 = 1.0;
+    }
 
     var atlas_uvs: array<vec4<f32>, 4>;
 
