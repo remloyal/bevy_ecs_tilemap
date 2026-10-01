@@ -22,7 +22,6 @@ use bevy::{
 use bevy::render::renderer::RenderDevice;
 #[cfg(not(feature = "atlas"))]
 use bevy::render::texture::GpuImage;
-use extract::remove_changed;
 
 use crate::{
     TilemapFirstSet,
@@ -37,7 +36,7 @@ use crate::{
 };
 
 use self::{
-    chunk::RenderChunk2dStorage,
+    chunk::{RenderChunk2dStorage, TilemapTextureSizes},
     draw::DrawTilemap,
     pipeline::{TILEMAP_SHADER_FRAGMENT, TILEMAP_SHADER_VERTEX, TilemapPipeline},
     queue::ImageBindGroups,
@@ -176,11 +175,20 @@ impl Plugin for TilemapRenderingPlugin {
                 Render,
                 prepare_textures.in_set(RenderSystems::PrepareAssets),
             )
-            .add_systems(Render, texture_array_cache::remove_modified_textures);
+            // Must run before `prepare_textures`: it drops cache entries for
+            // images that were reloaded, and `prepare_textures` is what puts them
+            // back. `prepare_textures` only looks at textures that were re-inserted
+            // this frame, so if the removal ran after it the entry would stay
+            // cleared until the next modification.
+            .add_systems(
+                Render,
+                texture_array_cache::remove_modified_textures.before(prepare_textures),
+            );
 
         render_app
             .insert_resource(DefaultSampler(sampler))
             .insert_resource(RenderChunk2dStorage::default())
+            .init_resource::<TilemapTextureSizes>()
             .add_systems(
                 ExtractSchedule,
                 (
@@ -198,7 +206,6 @@ impl Plugin for TilemapRenderingPlugin {
                 Render,
                 queue::queue_transform_bind_group.in_set(RenderSystems::PrepareBindGroups),
             )
-            .add_systems(Render, remove_changed.in_set(RenderSystems::Cleanup))
             .init_resource::<ImageBindGroups>()
             .init_resource::<SpecializedRenderPipelines<TilemapPipeline>>()
             .init_resource::<MeshUniformResource>()
@@ -273,6 +280,12 @@ fn clear_removed(
     removed_query: Query<Entity, With<RemovedTileEntity>>,
     removed_map_query: Query<Entity, With<RemovedMapEntity>>,
 ) {
+    // This runs every frame but the marker sets are almost always empty, so skip
+    // the (non-trivial) iteration entirely when there is nothing to despawn.
+    if removed_query.is_empty() && removed_map_query.is_empty() {
+        return;
+    }
+
     for entity in removed_query.iter() {
         commands.entity(entity).despawn();
     }
@@ -286,7 +299,22 @@ fn clear_removed(
 fn prepare_textures(
     render_device: Res<RenderDevice>,
     mut texture_array_cache: ResMut<TextureArrayCache>,
-    extracted_tilemap_textures: Query<&ExtractedTilemapTexture>,
+    // Only textures that were resolved or re-resolved this frame. Adding a
+    // texture to the cache keys a hash map by `TilemapTexture`, and a
+    // `TilemapTexture::Vector` hashes all of its handles, so doing this for
+    // every tilemap every frame cost `O(tilemaps * handles)` for a cache that is
+    // almost always already populated.
+    //
+    // Re-resolution re-inserts the component, so a texture whose image was
+    // reloaded shows up here again — and `remove_modified_textures` is ordered
+    // before this system so the cleared entry is restored in the same frame.
+    extracted_tilemap_textures: Query<
+        &ExtractedTilemapTexture,
+        Or<(
+            Added<ExtractedTilemapTexture>,
+            Changed<ExtractedTilemapTexture>,
+        )>,
+    >,
     render_images: Res<bevy::render::render_asset::RenderAssets<GpuImage>>,
 ) {
     for extracted_texture in extracted_tilemap_textures.iter() {

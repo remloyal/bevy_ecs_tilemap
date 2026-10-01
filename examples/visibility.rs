@@ -17,11 +17,18 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
         for y in 0..32u32 {
             let tile_pos = TilePos { x, y };
             let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    tilemap_id: TilemapId(tilemap_entity),
-                    ..Default::default()
-                })
+                .spawn((
+                    TileBundle {
+                        position: tile_pos,
+                        tilemap_id: TilemapId(tilemap_entity),
+                        ..Default::default()
+                    },
+                    // `TileVisible` is deliberately not part of `TileBundle`: a
+                    // tile without it renders as visible, and paying for the
+                    // component on every tile of a large map is wasted memory.
+                    // This example toggles it, so it has to opt in explicitly.
+                    TileVisible::default(),
+                ))
                 .id();
             tile_storage.set(&tile_pos, tile_entity);
         }

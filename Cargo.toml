@@ -101,6 +101,10 @@ name = "basic"
 path = "examples/basic.rs"
 required-features = ["render"]
 [[example]]
+name = "probe"
+path = "examples/probe.rs"
+required-features = ["render"]
+[[example]]
 name = "bench"
 path = "examples/bench.rs"
 required-features = ["render"]

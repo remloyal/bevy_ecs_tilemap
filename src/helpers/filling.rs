@@ -88,15 +88,18 @@ pub fn fill_tilemap_rect_color(
                     y: origin.y + y,
                 };
 
-                let tile_entity = parent
-                    .spawn(TileBundle {
-                        position: tile_pos,
-                        tilemap_id,
-                        texture_index,
-                        color: TileColor(color),
-                        ..Default::default()
-                    })
-                    .id();
+                let mut tile_entity = parent.spawn(TileBundle {
+                    position: tile_pos,
+                    tilemap_id,
+                    texture_index,
+                    ..Default::default()
+                });
+                // `TileColor` is no longer part of `TileBundle`; only insert it when the
+                // tile is not fully white, so tiles that need no tint cost nothing.
+                if color != Color::WHITE {
+                    tile_entity.insert(TileColor(color));
+                }
+                let tile_entity = tile_entity.id();
                 tile_storage.set(&tile_pos, tile_entity);
             }
         }

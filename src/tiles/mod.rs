@@ -85,6 +85,9 @@ impl From<Color> for TileColor {
 }
 
 /// Hides or shows a tile based on the boolean. Default: True
+///
+/// Not part of [TileBundle]: a tile without this component renders as visible, so
+/// only insert it on tiles that actually need hiding.
 #[derive(Component, Reflect, Clone, Copy, Debug, Hash, PartialEq, Eq)]
 #[reflect(Component)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -97,6 +100,8 @@ impl Default for TileVisible {
 }
 
 /// Flips the tiles texture along the X, Y or diagonal axes
+///
+/// Not part of [TileBundle]: only insert it on tiles that need flipping.
 #[derive(Component, Reflect, Default, Clone, Copy, Debug, Hash, PartialEq, Eq)]
 #[reflect(Component)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -115,9 +120,6 @@ pub struct TileBundle {
     pub position: TilePos,
     pub texture_index: TileTextureIndex,
     pub tilemap_id: TilemapId,
-    pub visible: TileVisible,
-    pub flip: TileFlip,
-    pub color: TileColor,
     pub old_position: TilePosOld,
     #[cfg_attr(feature = "serde", serde(skip))]
     pub sync: SyncToRenderWorld,

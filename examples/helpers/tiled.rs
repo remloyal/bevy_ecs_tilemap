@@ -373,14 +373,21 @@ fn process_loaded_maps(
                                         position: tile_pos,
                                         tilemap_id: TilemapId(layer_entity),
                                         texture_index: TileTextureIndex(texture_index),
-                                        flip: TileFlip {
-                                            x: layer_tile_data.flip_h,
-                                            y: layer_tile_data.flip_v,
-                                            d: layer_tile_data.flip_d,
-                                        },
                                         ..Default::default()
                                     })
                                     .id();
+                                // `TileFlip` is no longer part of `TileBundle`; only
+                                // insert it when the layer actually needs flipping.
+                                if layer_tile_data.flip_h
+                                    || layer_tile_data.flip_v
+                                    || layer_tile_data.flip_d
+                                {
+                                    commands.entity(tile_entity).insert(TileFlip {
+                                        x: layer_tile_data.flip_h,
+                                        y: layer_tile_data.flip_v,
+                                        d: layer_tile_data.flip_d,
+                                    });
+                                }
                                 tile_storage.set(&tile_pos, tile_entity);
                             }
                         }

@@ -37,19 +37,19 @@ fn spawn_map(
     for x in 0..map_size.x {
         for y in 0..map_size.y {
             let tile_pos = TilePos { x, y };
-            let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    tilemap_id: TilemapId(tilemap_entity),
-                    color: TileColor(
-                        Hsla::hsl(0., 0.9, 0.8)
-                            .rotate_hue(num_maps as f32 * 19.)
-                            .into(),
-                    ),
-                    texture_index: TileTextureIndex(5),
-                    ..default()
-                })
-                .id();
+            let mut tile_entity = commands.spawn(TileBundle {
+                position: tile_pos,
+                tilemap_id: TilemapId(tilemap_entity),
+                texture_index: TileTextureIndex(5),
+                ..default()
+            });
+            // `TileColor` is no longer part of `TileBundle`; insert it explicitly.
+            tile_entity.insert(TileColor(
+                Hsla::hsl(0., 0.9, 0.8)
+                    .rotate_hue(num_maps as f32 * 19.)
+                    .into(),
+            ));
+            let tile_entity = tile_entity.id();
             tile_storage.set(&tile_pos, tile_entity);
         }
     }

@@ -21,10 +21,13 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .spawn(TileBundle {
                     position: tile_pos,
                     tilemap_id: TilemapId(tilemap_entity),
-                    visible: TileVisible(i % 2 == 0 || i % 7 == 0),
                     ..Default::default()
                 })
                 .id();
+            // `TileVisible` is no longer part of `TileBundle`; insert it explicitly.
+            commands
+                .entity(tile_entity)
+                .insert(TileVisible(i % 2 == 0 || i % 7 == 0));
             tile_storage.set(&tile_pos, tile_entity);
             i += 1;
         }
