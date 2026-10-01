@@ -223,22 +223,39 @@ impl TilemapTexture {
     }
 
     /// Sets images with the `COPY_SRC` flag.
+    ///
+    /// Iterates the handles directly rather than via [`Self::image_handles`],
+    /// which would allocate a vector. `set_texture_to_copy_src` runs this for
+    /// every tilemap on every frame, and the flag is already set after the first
+    /// load, so the steady state is a lookup per handle and nothing else.
     pub fn set_images_to_copy_src(&self, images: &mut ResMut<Assets<Image>>) {
-        for handle in self.image_handles() {
-            // NOTE: We retrieve it non-mutably first to avoid triggering an `AssetEvent::Modified`
-            // if we didn't actually need to modify it
-            if let Some(image) = images.get(handle)
-                && !image
-                    .texture_descriptor
-                    .usage
-                    .contains(TextureUsages::COPY_SRC)
-                && let Some(mut image) = images.get_mut(handle)
-            {
-                image.texture_descriptor.usage = TextureUsages::TEXTURE_BINDING
-                    | TextureUsages::COPY_SRC
-                    | TextureUsages::COPY_DST;
-            };
+        match self {
+            TilemapTexture::Single(handle) => set_copy_src(handle, images),
+            #[cfg(not(feature = "atlas"))]
+            TilemapTexture::Vector(handles) => {
+                for handle in handles {
+                    set_copy_src(handle, images);
+                }
+            }
+            #[cfg(not(feature = "atlas"))]
+            TilemapTexture::TextureContainer(handle) => set_copy_src(handle, images),
         }
+    }
+}
+
+/// Adds the usages the texture array copy needs to a single image.
+fn set_copy_src(handle: &Handle<Image>, images: &mut ResMut<Assets<Image>>) {
+    // NOTE: We retrieve it non-mutably first to avoid triggering an
+    // `AssetEvent::Modified` if we didn't actually need to modify it.
+    if let Some(image) = images.get(handle)
+        && !image
+            .texture_descriptor
+            .usage
+            .contains(TextureUsages::COPY_SRC)
+        && let Some(mut image) = images.get_mut(handle)
+    {
+        image.texture_descriptor.usage =
+            TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC | TextureUsages::COPY_DST;
     }
 }
 

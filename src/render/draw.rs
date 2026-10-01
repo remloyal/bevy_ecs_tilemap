@@ -127,14 +127,6 @@ impl RenderCommand<Transparent2d> for SetItemPipeline {
     }
 }
 
-pub type DrawTilemap = (
-    SetItemPipeline,
-    SetMeshViewBindGroup<0>,
-    SetTransformBindGroup<1>,
-    SetTextureBindGroup<2>,
-    DrawMesh,
-);
-
 pub type DrawTilemapMaterial<M> = (
     SetItemPipeline,
     SetMeshViewBindGroup<0>,

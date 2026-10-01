@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 
 use bevy::{
     asset::load_internal_asset,
-    core_pipeline::core_2d::Transparent2d,
     image::ImageSamplerDescriptor,
     mesh::MeshVertexAttribute,
     platform::collections::HashSet,
@@ -11,7 +10,6 @@ use bevy::{
         Render, RenderApp, RenderSystems,
         extract_component::{ExtractComponent, ExtractComponentPlugin},
         extract_resource::{ExtractResource, extract_resource},
-        render_phase::AddRenderCommand,
         render_resource::{FilterMode, SpecializedRenderPipelines, VertexFormat},
         sync_world::RenderEntity,
     },
@@ -37,7 +35,6 @@ use crate::{
 
 use self::{
     chunk::{RenderChunk2dStorage, TilemapTextureSizes},
-    draw::DrawTilemap,
     pipeline::{TILEMAP_SHADER_FRAGMENT, TILEMAP_SHADER_VERTEX, TilemapPipeline},
     queue::ImageBindGroups,
 };
@@ -211,8 +208,6 @@ impl Plugin for TilemapRenderingPlugin {
             .init_resource::<MeshUniformResource>()
             .init_resource::<TilemapUniformResource>()
             .init_resource::<ModifiedImageIds>();
-
-        render_app.add_render_command::<Transparent2d, DrawTilemap>();
     }
 }
 
@@ -330,8 +325,17 @@ fn prepare_textures(
 pub struct ModifiedImageIds(HashSet<AssetId<Image>>);
 
 impl ModifiedImageIds {
-    // Determines whether `texture` contains any handles of modified images.
+    /// Determines whether `texture` contains any handles of modified images.
+    ///
+    /// This runs once per chunk per frame from `bind_material_tilemap_meshes`, and
+    /// `image_handles` allocates a vector to do it, so the empty check comes
+    /// first. Nothing is modified on almost every frame, and the set is only
+    /// populated on frames where an asset actually changed.
     pub fn is_texture_modified(&self, texture: &TilemapTexture) -> bool {
+        if self.0.is_empty() {
+            return false;
+        }
+
         texture
             .image_handles()
             .iter()
