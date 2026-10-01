@@ -10,7 +10,7 @@ use bevy::{
         Component, Deref, DerefMut, Entity, Handle, Image, Reflect, ReflectComponent, Res, ResMut,
     },
     render::render_resource::TextureUsages,
-    scene::{Scene, SceneComponent, bsn},
+    scene::{Scene, bsn},
 };
 use std::ops::Add;
 
@@ -27,8 +27,7 @@ pub struct TilemapRenderSettingsProps {
 /// Custom parameters for the render pipeline.
 ///
 /// It must be added as a component to the tilemap entity.
-#[derive(SceneComponent, Debug, Copy, Clone)]
-#[scene(TilemapRenderSettingsProps)]
+#[derive(Component, Debug, Copy, Clone)]
 #[require(VisibilityClass)]
 #[component(on_add = add_visibility_class::<TilemapRenderSettings>)]
 pub struct TilemapRenderSettings {
@@ -95,9 +94,8 @@ pub struct TilemapSizeProps {
 }
 
 /// Size of the tilemap in tiles.
-#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, Hash, PartialEq)]
+#[derive(Component, Reflect, Default, Clone, Copy, Debug, Hash, PartialEq)]
 #[reflect(Component)]
-#[scene(TilemapSizeProps)]
 pub struct TilemapSize {
     pub x: u32,
     pub y: u32,
@@ -252,9 +250,8 @@ pub struct TilemapTileSizeProps {
 }
 
 /// Size of the tiles in pixels
-#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
+#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
 #[reflect(Component)]
-#[scene(TilemapTileSizeProps)]
 pub struct TilemapTileSize {
     pub x: f32,
     pub y: f32,
@@ -334,9 +331,8 @@ pub struct TilemapGridSizeProps {
 /// This can be used to overlay tiles on top of each other.
 /// Ex. A 16x16 pixel tile can be overlapped by 8 pixels by using
 /// a grid size of 16x8.
-#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
+#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
 #[reflect(Component)]
-#[scene(TilemapGridSizeProps)]
 pub struct TilemapGridSize {
     pub x: f32,
     pub y: f32,
@@ -410,9 +406,8 @@ pub struct TilemapSpacingProps {
 
 /// Spacing between tiles in pixels inside of the texture atlas.
 /// Defaults to 0.0
-#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialEq)]
 #[reflect(Component)]
-#[scene(TilemapSpacingProps)]
 pub struct TilemapSpacing {
     pub x: f32,
     pub y: f32,
@@ -473,9 +468,8 @@ pub struct TilemapTextureSizeProps {
 }
 
 /// Size of the atlas texture in pixels.
-#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialEq)]
 #[reflect(Component)]
-#[scene(TilemapTextureSizeProps)]
 pub struct TilemapTextureSize {
     pub x: f32,
     pub y: f32,

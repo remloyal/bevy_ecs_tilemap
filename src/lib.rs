@@ -22,6 +22,7 @@ use bevy::{
         Query, Reflect, ReflectComponent, SystemSet, Transform, ViewVisibility, Visibility,
     },
     render::sync_world::SyncToRenderWorld,
+    scene::{Scene, bsn},
     time::TimeSystems,
 };
 
@@ -114,6 +115,74 @@ impl Default for FrustumCulling {
 #[cfg(feature = "render")]
 pub type TilemapBundle = MaterialTilemapBundle<StandardTilemapMaterial>;
 
+/// Props for [`tilemap_scene`]. Mirrors the fields of [`TilemapBundle`].
+#[cfg(feature = "render")]
+#[derive(Default, Debug, Clone)]
+pub struct TilemapSceneProps<M: MaterialTilemap = StandardTilemapMaterial> {
+    pub grid_size: TilemapGridSize,
+    pub map_type: TilemapType,
+    pub size: TilemapSize,
+    pub spacing: TilemapSpacing,
+    pub texture: TilemapTexture,
+    pub tile_size: TilemapTileSize,
+    pub storage: TileStorage,
+    pub transform: Transform,
+    pub anchor: TilemapAnchor,
+    pub render_settings: TilemapRenderSettings,
+    pub material: MaterialTilemapHandle<M>,
+    pub visibility: Visibility,
+    pub frustum_culling: FrustumCulling,
+}
+
+/// Builds a [BSN](https://docs.rs/bevy_scene/latest/bevy_scene/) scene that spawns a tilemap.
+///
+/// This is the scene-based counterpart to [`TilemapBundle`]. It is purely additive —
+/// spawning the bundle directly keeps working unchanged.
+///
+/// The three enum components (`TilemapType`, `TilemapAnchor`, `TilemapTexture`) are not
+/// included, because `bsn!` cannot take an arbitrary expression for an enum; pass them in
+/// your own `bsn!` block instead:
+///
+/// ```no_run
+/// # use bevy::prelude::*;
+/// # use bevy_ecs_tilemap::prelude::*;
+/// fn setup(mut commands: Commands) {
+///     commands.spawn_scene((
+///         tilemap_scene(TilemapSceneProps {
+///             tile_size: TilemapTileSize { x: 16.0, y: 16.0 },
+///             ..default()
+///         }),
+///         bsn! {
+///             TilemapType::Hexagon(HexCoordSystem::Column)
+///             TilemapAnchor::Center
+///         },
+///     ));
+/// }
+/// ```
+#[cfg(feature = "render")]
+pub fn tilemap_scene<M: MaterialTilemap>(props: TilemapSceneProps<M>) -> impl Scene {
+    // Inside `bsn!` a bare identifier inserts that variable as a component.
+    let storage = props.storage;
+    let transform = props.transform;
+    let visibility = props.visibility;
+    let frustum_culling = props.frustum_culling;
+
+    bsn! {
+        TilemapGridSize { x: {props.grid_size.x}, y: {props.grid_size.y} }
+        TilemapSize { x: {props.size.x}, y: {props.size.y} }
+        TilemapTileSize { x: {props.tile_size.x}, y: {props.tile_size.y} }
+        TilemapSpacing { x: {props.spacing.x}, y: {props.spacing.y} }
+        TilemapRenderSettings {
+            render_chunk_size: {props.render_settings.render_chunk_size},
+            y_sort: {props.render_settings.y_sort},
+        }
+        storage
+        transform
+        visibility
+        frustum_culling
+    }
+}
+
 #[cfg(feature = "render")]
 /// The default tilemap bundle. All of the components within are required.
 #[derive(Bundle, Debug, Default, Clone)]
@@ -192,6 +261,8 @@ pub mod prelude {
     #[cfg(feature = "render")]
     pub use crate::render::material::StandardTilemapMaterial;
     pub use crate::tiles::*;
+    #[cfg(feature = "render")]
+    pub use crate::{TilemapSceneProps, tilemap_scene};
 }
 
 /// Updates old tile positions with the new values from the last frame.
