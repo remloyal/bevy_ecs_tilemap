@@ -10,16 +10,25 @@ use bevy::{
         Component, Deref, DerefMut, Entity, Handle, Image, Reflect, ReflectComponent, Res, ResMut,
     },
     render::render_resource::TextureUsages,
+    scene::{Scene, SceneComponent, bsn},
 };
 use std::ops::Add;
 
 /// The default chunk_size (in tiles) used per mesh.
 pub const CHUNK_SIZE_2D: UVec2 = UVec2::from_array([64, 64]);
 
+/// Props for [`TilemapRenderSettings`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TilemapRenderSettingsProps {
+    pub render_chunk_size: UVec2,
+    pub y_sort: bool,
+}
+
 /// Custom parameters for the render pipeline.
 ///
 /// It must be added as a component to the tilemap entity.
-#[derive(Component, Debug, Copy, Clone)]
+#[derive(SceneComponent, Debug, Copy, Clone)]
+#[scene(TilemapRenderSettingsProps)]
 #[require(VisibilityClass)]
 #[component(on_add = add_visibility_class::<TilemapRenderSettings>)]
 pub struct TilemapRenderSettings {
@@ -48,6 +57,18 @@ impl Default for TilemapRenderSettings {
     }
 }
 
+impl TilemapRenderSettings {
+    /// Builds a scene containing this component.
+    pub fn scene(props: TilemapRenderSettingsProps) -> impl Scene {
+        bsn! {
+            TilemapRenderSettings {
+                render_chunk_size: {props.render_chunk_size},
+                y_sort: {props.y_sort},
+            }
+        }
+    }
+}
+
 /// A component which stores a reference to the tilemap entity.
 #[derive(Component, Reflect, Clone, Copy, Debug, Hash, Deref, DerefMut, PartialEq, Eq)]
 #[reflect(Component, MapEntities)]
@@ -66,9 +87,17 @@ impl Default for TilemapId {
     }
 }
 
+/// Props for [`TilemapSize`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TilemapSizeProps {
+    pub x: u32,
+    pub y: u32,
+}
+
 /// Size of the tilemap in tiles.
-#[derive(Component, Reflect, Default, Clone, Copy, Debug, Hash, PartialEq)]
+#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, Hash, PartialEq)]
 #[reflect(Component)]
+#[scene(TilemapSizeProps)]
 pub struct TilemapSize {
     pub x: u32,
     pub y: u32,
@@ -77,6 +106,13 @@ pub struct TilemapSize {
 impl TilemapSize {
     pub const fn new(x: u32, y: u32) -> Self {
         Self { x, y }
+    }
+
+    /// Builds a scene containing this component.
+    pub fn scene(props: TilemapSizeProps) -> impl Scene {
+        bsn! {
+            TilemapSize { x: {props.x}, y: {props.y} }
+        }
     }
 
     pub const fn count(&self) -> usize {
@@ -208,9 +244,17 @@ impl TilemapTexture {
     }
 }
 
+/// Props for [`TilemapTileSize`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TilemapTileSizeProps {
+    pub x: f32,
+    pub y: f32,
+}
+
 /// Size of the tiles in pixels
-#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
+#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
 #[reflect(Component)]
+#[scene(TilemapTileSizeProps)]
 pub struct TilemapTileSize {
     pub x: f32,
     pub y: f32,
@@ -219,6 +263,13 @@ pub struct TilemapTileSize {
 impl TilemapTileSize {
     pub const fn new(x: f32, y: f32) -> Self {
         Self { x, y }
+    }
+
+    /// Builds a scene containing this component.
+    pub fn scene(props: TilemapTileSizeProps) -> impl Scene {
+        bsn! {
+            TilemapTileSize { x: {props.x}, y: {props.y} }
+        }
     }
 }
 
@@ -272,12 +323,20 @@ impl From<Vec2> for TilemapTileSize {
     }
 }
 
+/// Props for [`TilemapGridSize`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TilemapGridSizeProps {
+    pub x: f32,
+    pub y: f32,
+}
+
 /// Size of the tiles on the grid in pixels.
 /// This can be used to overlay tiles on top of each other.
 /// Ex. A 16x16 pixel tile can be overlapped by 8 pixels by using
 /// a grid size of 16x8.
-#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
+#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialOrd, PartialEq)]
 #[reflect(Component)]
+#[scene(TilemapGridSizeProps)]
 pub struct TilemapGridSize {
     pub x: f32,
     pub y: f32,
@@ -286,6 +345,13 @@ pub struct TilemapGridSize {
 impl TilemapGridSize {
     pub const fn new(x: f32, y: f32) -> Self {
         Self { x, y }
+    }
+
+    /// Builds a scene containing this component.
+    pub fn scene(props: TilemapGridSizeProps) -> impl Scene {
+        bsn! {
+            TilemapGridSize { x: {props.x}, y: {props.y} }
+        }
     }
 }
 
@@ -335,13 +401,30 @@ impl From<&Vec2> for TilemapGridSize {
     }
 }
 
+/// Props for [`TilemapSpacing`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TilemapSpacingProps {
+    pub x: f32,
+    pub y: f32,
+}
+
 /// Spacing between tiles in pixels inside of the texture atlas.
 /// Defaults to 0.0
-#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialEq)]
+#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialEq)]
 #[reflect(Component)]
+#[scene(TilemapSpacingProps)]
 pub struct TilemapSpacing {
     pub x: f32,
     pub y: f32,
+}
+
+impl TilemapSpacing {
+    /// Builds a scene containing this component.
+    pub fn scene(props: TilemapSpacingProps) -> impl Scene {
+        bsn! {
+            TilemapSpacing { x: {props.x}, y: {props.y} }
+        }
+    }
 }
 
 impl Add<TilemapSpacing> for TilemapSpacing {
@@ -382,12 +465,29 @@ impl TilemapSpacing {
     }
 }
 
+/// Props for [`TilemapTextureSize`].
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TilemapTextureSizeProps {
+    pub x: f32,
+    pub y: f32,
+}
+
 /// Size of the atlas texture in pixels.
-#[derive(Component, Reflect, Default, Clone, Copy, Debug, PartialEq)]
+#[derive(SceneComponent, Reflect, Default, Clone, Copy, Debug, PartialEq)]
 #[reflect(Component)]
+#[scene(TilemapTextureSizeProps)]
 pub struct TilemapTextureSize {
     pub x: f32,
     pub y: f32,
+}
+
+impl TilemapTextureSize {
+    /// Builds a scene containing this component.
+    pub fn scene(props: TilemapTextureSizeProps) -> impl Scene {
+        bsn! {
+            TilemapTextureSize { x: {props.x}, y: {props.y} }
+        }
+    }
 }
 
 impl TilemapTextureSize {

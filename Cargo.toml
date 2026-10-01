@@ -20,6 +20,7 @@ bevy = { version = "0.20.0-rc.2", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_render",
     "bevy_asset",
+    "bevy_scene",
     "bevy_sprite_render",
     "bevy_log",
 ] }
