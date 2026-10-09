@@ -148,7 +148,7 @@ pub struct TilemapSceneProps<M: MaterialTilemap = StandardTilemapMaterial> {
 /// # use bevy_ecs_tilemap::prelude::*;
 /// fn setup(mut commands: Commands) {
 ///     commands.spawn_scene((
-///         tilemap_scene(TilemapSceneProps {
+///         tilemap_scene(TilemapSceneProps::<StandardTilemapMaterial> {
 ///             tile_size: TilemapTileSize { x: 16.0, y: 16.0 },
 ///             ..default()
 ///         }),
